@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataStorer - Premium Contact Keeper</title>
+  <!-- Google Fonts: Outfit + Playfair Display + Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  
+  <!-- Backdrop Blur Orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Global Header -->
+  <header>
+    <div class="nav-container">
+      <div class="logo">
+        <i class="fa-solid fa-cloud-bolt logo-icon"></i>
+        <span>DataStorer</span>
+      </div>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#security" class="nav-link">Security</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="#register" class="nav-link cta">Get Started</a>
+      </nav>
+      <div class="header-actions">
+        <button id="theme-toggle" class="theme-btn" title="Toggle Theme">
+          <i class="fa-solid fa-sun"></i>
+        </button>
+        <div id="user-profile-widget" style="display: none;">
+          <span id="user-greeting">Hi, User</span>
+          <button id="settings-btn" class="icon-btn" title="Settings">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+          <button id="logout-btn" class="btn btn-danger">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-wrapper">
+
+    <div class="hero glass-strong">
+      <div class="hero-content">
+        <h1>Enterprise‑grade contact storage, beautifully simple.</h1>
+        <p>Secure, fast and private contact management with end‑to‑end encryption and effortless workflows.</p>
+        <div class="hero-cta">
+          <a href="#register" class="btn btn-primary">Get Started — It's Free</a>
+          <a href="#features" class="btn btn-secondary">Explore Features</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <!-- decorative placeholder; replace with your illustration -->
+        <svg width="320" height="220" viewBox="0 0 320 220" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:320px;">
+          <rect rx="16" width="320" height="220" fill="url(#g)" />
+          <defs>
+            <linearGradient id="g" x1="0" x2="1">
+              <stop offset="0" stop-color="#8B5CF6" stop-opacity="0.7" />
+              <stop offset="1" stop-color="#06B6D4" stop-opacity="0.7" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+
+    <!-- AUTH SECTION (Login / Registration) -->
+    <section id="auth-section" class="section-container">
+      <div class="auth-card glass">
+        <!-- Auth View Switcher (Tabs) -->
+        <div class="auth-tabs" id="auth-tabs-header">
+          <button class="auth-tab active" data-tab="password"><i class="fa-solid fa-lock"></i> Password</button>
+          <button class="auth-tab" data-tab="pin"><i class="fa-solid fa-key"></i> PIN</button>
+          <button class="auth-tab" data-tab="biometrics"><i class="fa-solid fa-fingerprint"></i> Biometric</button>
+        </div>
+
+        <div class="auth-forms-container">
+          <!-- Password Login Form -->
+          <form id="password-login-form" class="auth-form active">
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Access your secure contacts directory</p>
+            <div class="input-group">
+              <label for="login-pw-username">Username</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input type="text" id="login-pw-username" placeholder="Enter username" required autocomplete="username">
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="login-pw-password">Password</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-key input-icon"></i>
+                <input type="password" id="login-pw-password" placeholder="Enter password" required autocomplete="current-password">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Log In</button>
+            <p class="auth-footer">Don't have an account? <a href="#" class="switch-to-register">Register here</a></p>
+          </form>
+
+          <!-- PIN Login Form -->
+          <div id="pin-login-form" class="auth-form">
+            <h2>Fast PIN Access</h2>
+            <p class="subtitle">Enter your username and PIN to unlock</p>
+            
+            <div class="input-group">
+              <label for="login-pin-username">Username</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input type="text" id="login-pin-username" placeholder="Enter username" autocomplete="username">
+              </div>
+            </div>
+
+            <div class="pin-display-wrapper">
+              <div class="pin-dots">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+              <input type="hidden" id="login-pin-value" value="">
+            </div>
+
+            <!-- Virtual Keypad -->
+            <div class="keypad">
+              <button class="key-btn" data-val="1">1</button>
+              <button class="key-btn" data-val="2">2</button>
+              <button class="key-btn" data-val="3">3</button>
+              <button class="key-btn" data-val="4">4</button>
+              <button class="key-btn" data-val="5">5</button>
+              <button class="key-btn" data-val="6">6</button>
+              <button class="key-btn" data-val="7">7</button>
+              <button class="key-btn" data-val="8">8</button>
+              <button class="key-btn" data-val="9">9</button>
+              <button class="key-btn text-key" id="key-clear">Clear</button>
+              <button class="key-btn" data-val="0">0</button>
+              <button class="key-btn text-key" id="key-back"><i class="fa-solid fa-backspace"></i></button>
+            </div>
+
+            <button id="pin-submit-btn" class="btn btn-primary btn-block" style="margin-top: 15px;">Unlock With PIN</button>
+            <p class="auth-footer">Don't have an account? <a href="#" class="switch-to-register">Register here</a></p>
+          </div>
+
+          <!-- Biometric Login Form -->
+          <div id="biometrics-login-form" class="auth-form">
+            <h2>Biometric Login</h2>
+            <p class="subtitle">Secure, keyless entry using Windows Hello / TouchID</p>
+            
+            <div class="input-group">
+              <label for="login-bio-username">Username</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input type="text" id="login-bio-username" placeholder="Enter username" autocomplete="username">
+              </div>
+            </div>
+
+            <!-- Glowing Fingerprint Scanner UI -->
+            <div class="scanner-container">
+              <div class="fingerprint-scan-btn" id="bio-scan-trigger">
+                <i class="fa-solid fa-fingerprint fingerprint-icon"></i>
+                <div class="scan-laser"></div>
+              </div>
+              <p class="scanner-status" id="bio-scanner-status">Click above to scan</p>
+            </div>
+
+            <p class="auth-footer">Don't have an account? <a href="#" class="switch-to-register">Register here</a></p>
+          </div>
+
+          <!-- Registration Form -->
+          <form id="register-form" class="auth-form">
+            <h2>Create Account</h2>
+            <p class="subtitle">Store your data with state-of-the-art security</p>
+            <div class="input-group">
+              <label for="reg-username">Username</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input type="text" id="reg-username" placeholder="Choose a username" required autocomplete="username">
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="reg-password">Password</label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="reg-password" placeholder="Create a strong password" required autocomplete="new-password">
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="reg-pin">Quick-Login PIN <span class="badge">Optional</span></label>
+              <div class="input-wrapper">
+                <i class="fa-solid fa-key input-icon"></i>
+                <input type="password" id="reg-pin" placeholder="Enter a 4-to-6 digit numeric PIN" pattern="[0-9]{4,6}" inputmode="numeric" maxlength="6">
+              </div>
+              <p class="input-hint">Used for faster logins without passwords</p>
+            </div>
+            <button type="submit" class="btn btn-accent btn-block">Register Account</button>
+            <p class="auth-footer">Already have an account? <a href="#" class="switch-to-login">Log in here</a></p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD SECTION -->
+    <section id="dashboard-section" class="section-container" style="display: none;">
+      
+      <!-- Stats / Utility Panel -->
+      <div class="dashboard-header glass">
+        <div class="search-bar-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="search-input" placeholder="Search contacts by name, number, or location...">
+        </div>
+        <div class="dashboard-controls">
+          <button id="add-contact-btn" class="btn btn-accent">
+            <i class="fa-solid fa-plus"></i> Add Contact
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card glass">
+          <div class="stat-icon purple"><i class="fa-solid fa-address-book"></i></div>
+          <div class="stat-info">
+            <h3 id="stat-total-contacts">0</h3>
+            <p>Total Contacts</p>
+          </div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon blue"><i class="fa-solid fa-map-location-dot"></i></div>
+          <div class="stat-info">
+            <h3 id="stat-mapped-contacts">0</h3>
+            <p>Locations on GMaps</p>
+          </div>
+        </div>
+        <div class="stat-card glass">
+          <div class="stat-icon green"><i class="fa-solid fa-shield-halved"></i></div>
+          <div class="stat-info">
+            <h3>Database</h3>
+            <p>Securely Saved</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contacts List -->
+      <div class="contacts-wrapper">
+        <div id="no-contacts-view" class="no-contacts glass" style="display: none;">
+          <i class="fa-regular fa-address-card no-contacts-icon"></i>
+          <h3>No contacts found</h3>
+          <p>Click "Add Contact" to save your first contact detailing mobile number, address, and picture.</p>
+        </div>
+        <div id="contacts-grid" class="contacts-grid">
+          <!-- Dynamic Contact Cards injected here -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ADD / EDIT CONTACT MODAL -->
+  <div class="modal-overlay" id="contact-modal" style="display: none;">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h2 id="contact-modal-title">Add Contact</h2>
+        <button class="modal-close" id="contact-modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="contact-form">
+        <input type="hidden" id="contact-edit-id" value="">
+        
+        <!-- Image Preview & Input -->
+        <div class="image-upload-wrapper">
+          <div class="avatar-preview-container">
+            <img id="avatar-preview" src="/api/placeholder" alt="Contact Avatar">
+            <div class="avatar-overlay">
+              <i class="fa-solid fa-camera"></i>
+              <span>Upload</span>
+            </div>
+            <input type="file" id="contact-picture-input" accept="image/*">
+          </div>
+          <p class="upload-label">Contact Image</p>
+        </div>
+
+        <div class="input-group">
+          <label for="contact-name">Full Name</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-user input-icon"></i>
+            <input type="text" id="contact-name" placeholder="Enter contact name" required>
+          </div>
+        </div>
+
+        <div class="input-group phone-group">
+          <label>Mobile Numbers</label>
+          <div id="phone-list" class="phone-list">
+            <div class="phone-row">
+              <div class="input-wrapper">
+                <i class="fa-solid fa-phone input-icon"></i>
+                <input type="tel" class="contact-phone-input" placeholder="Enter mobile number" required>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm remove-phone-btn" style="display:none;"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <button type="button" id="add-phone-btn" class="btn btn-accent btn-sm"><i class="fa-solid fa-plus"></i> Add Mobile No</button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="contact-email">Email Address</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" id="contact-email" placeholder="name@company.com">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="contact-occupation">Occupation</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-briefcase input-icon"></i>
+            <input type="text" id="contact-occupation" placeholder="Job title or role">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="contact-occupation-location">Occupation Location</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-building input-icon"></i>
+            <input type="text" id="contact-occupation-location" placeholder="Company / Office address">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="contact-notes">Notes</label>
+          <textarea id="contact-notes" placeholder="Add notes about this contact (preferences, relationship, etc.)" rows="4"></textarea>
+        </div>
+
+        <div class="input-group">
+          <label for="contact-location">Location / Address (for GMaps)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-location-dot input-icon"></i>
+            <input type="text" id="contact-location" placeholder="Address, City or Coordinates (e.g. 12.9716,77.5946)">
+          </div>
+          <p class="input-hint">Provide an address or GPS coordinates. A direct link to open this on Google Maps will be generated automatically.</p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="contact-modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-accent" id="contact-modal-save">Save Contact</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL (PIN & Biometrics Management) -->
+  <div class="modal-overlay" id="settings-modal" style="display: none;">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h2>Security Settings</h2>
+        <button class="modal-close" id="settings-modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div class="settings-content">
+        <!-- Section 1: PIN Setup -->
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-key"></i> Quick PIN Authentication</h3>
+          <p class="settings-desc">Manage a 4-to-6 digit PIN to access the application quickly from secondary devices.</p>
+          
+          <div class="settings-action-row">
+            <span id="pin-status-label" class="badge">PIN not set</span>
+            <div>
+              <button id="settings-remove-pin-btn" class="btn btn-danger btn-sm" style="display: none;">Remove PIN</button>
+              <button id="settings-set-pin-btn" class="btn btn-primary btn-sm">Set New PIN</button>
+            </div>
+          </div>
+
+          <!-- Quick inline PIN entry form -->
+          <div id="settings-pin-form-wrapper" style="display: none; margin-top: 15px;" class="sub-form-card">
+            <div class="input-group">
+              <label for="settings-new-pin">Enter New PIN (4-6 digits)</label>
+              <input type="password" id="settings-new-pin" placeholder="Enter numeric PIN" pattern="[0-9]{4,6}" inputmode="numeric" maxlength="6">
+            </div>
+            <button id="save-new-pin-btn" class="btn btn-accent btn-sm">Save PIN</button>
+            <button id="cancel-new-pin-btn" class="btn btn-secondary btn-sm">Cancel</button>
+          </div>
+        </div>
+
+        <hr class="settings-divider">
+
+        <!-- Section 2: Biometrics Setup -->
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-fingerprint"></i> Biometric Device Registration</h3>
+          <p class="settings-desc">Enroll this browser's credentials (fingerprint sensor, FaceID, or OS security PIN) to log in instantly without passwords.</p>
+          
+          <div class="settings-action-row">
+            <span id="bio-status-label" class="badge">Biometrics not registered</span>
+            <button id="settings-register-bio-btn" class="btn btn-primary btn-sm">
+              <i class="fa-solid fa-plus"></i> Register This Device
+            </button>
+          </div>
+          <p class="input-hint" style="margin-top: 8px;">Note: WebAuthn requires a secure setup. For development, this operates on <code>localhost</code>.</p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="settings-modal-done">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application Logic -->
+  <script src="/js/api.js"></script>
+  <script src="/js/webauthn.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

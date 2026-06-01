@@ -372,8 +372,11 @@ app.get('/api/contacts', authenticateToken, (req, res) => {
 });
 
 // Add a new contact (handles optional picture upload)
-app.post('/api/contacts', authenticateToken, upload.single('picture'), (req, res) => {
-  const { name, phone, phones, location, email, occupation, occupationLocation, notes } = req.body;
+app.post('/api/contacts', authenticateToken, upload.fields([
+  { name: 'picture', maxCount: 1 },
+  { name: 'additionalImages', maxCount: 10 }
+]), (req, res) => {
+  const { name, phone, phones, location, email, occupation, occupationLocation, notes, customFields } = req.body;
 
   // Parse phones (may be JSON string when sent via FormData)
   let phonesArray = [];
@@ -386,14 +389,26 @@ app.post('/api/contacts', authenticateToken, upload.single('picture'), (req, res
   const primaryPhone = phone || (phonesArray && phonesArray[0]);
 
   if (!name || !primaryPhone) {
-    // Clean up uploaded file if validation fails
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
+    // Clean up uploaded files if validation fails
+    if (req.files) {
+      Object.keys(req.files).forEach(key => {
+        req.files[key].forEach(f => {
+          try { fs.unlinkSync(f.path); } catch (e) {}
+        });
+      });
     }
     return res.status(400).json({ error: 'Name and Mobile Number are required.' });
   }
 
   try {
+    const pictureFile = req.files && req.files['picture'] ? req.files['picture'][0] : null;
+    const additionalFiles = req.files && req.files['additionalImages'] ? req.files['additionalImages'] : [];
+
+    let parsedCustomFields = [];
+    if (customFields) {
+      try { parsedCustomFields = JSON.parse(customFields); } catch (e) { parsedCustomFields = []; }
+    }
+
     const contactData = {
       name,
       phone: primaryPhone,
@@ -403,23 +418,32 @@ app.post('/api/contacts', authenticateToken, upload.single('picture'), (req, res
       occupationLocation: occupationLocation || '',
       notes: notes || '',
       location: location || '',
-      picture: req.file ? 'uploads/' + req.file.filename : null
+      picture: pictureFile ? 'uploads/' + pictureFile.filename : null,
+      additionalImages: additionalFiles.map(f => 'uploads/' + f.filename),
+      customFields: parsedCustomFields
     };
 
     const newContact = db.addContact(req.user.id, contactData);
     res.status(201).json(newContact);
   } catch (err) {
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
+    if (req.files) {
+      Object.keys(req.files).forEach(key => {
+        req.files[key].forEach(f => {
+          try { fs.unlinkSync(f.path); } catch (e) {}
+        });
+      });
     }
     res.status(500).json({ error: 'Failed to add contact: ' + err.message });
   }
 });
 
 // Update a contact (handles optional picture update)
-app.put('/api/contacts/:id', authenticateToken, upload.single('picture'), (req, res) => {
+app.put('/api/contacts/:id', authenticateToken, upload.fields([
+  { name: 'picture', maxCount: 1 },
+  { name: 'additionalImages', maxCount: 10 }
+]), (req, res) => {
   const contactId = req.params.id;
-  const { name, phone, phones, location, email, occupation, occupationLocation, notes } = req.body;
+  const { name, phone, phones, location, email, occupation, occupationLocation, notes, customFields, existingAdditionalImages } = req.body;
 
   try {
     const updatedFields = {};
@@ -438,9 +462,15 @@ app.put('/api/contacts/:id', authenticateToken, upload.single('picture'), (req, 
       updatedFields.phone = phone;
     }
 
+    // Parse custom fields when provided
+    if (customFields !== undefined) {
+      try { updatedFields.customFields = JSON.parse(customFields); } catch (e) { updatedFields.customFields = []; }
+    }
+
     // Handle new picture upload
-    if (req.file) {
-      updatedFields.picture = 'uploads/' + req.file.filename;
+    const pictureFile = req.files && req.files['picture'] ? req.files['picture'][0] : null;
+    if (pictureFile) {
+      updatedFields.picture = 'uploads/' + pictureFile.filename;
 
       // Delete the previous picture file if there was one
       const oldContacts = db.getContacts(req.user.id);
@@ -448,16 +478,53 @@ app.put('/api/contacts/:id', authenticateToken, upload.single('picture'), (req, 
       if (contact && contact.picture && contact.picture.startsWith('uploads/')) {
         const oldPicPath = path.join(__dirname, contact.picture);
         if (fs.existsSync(oldPicPath)) {
-          fs.unlinkSync(oldPicPath);
+          try { fs.unlinkSync(oldPicPath); } catch (e) {}
         }
+      }
+    }
+
+    // Handle additional images merging and deletion
+    const oldContacts = db.getContacts(req.user.id);
+    const contact = oldContacts.find(c => c.id === contactId);
+
+    if (contact) {
+      let existingImages = [];
+      if (existingAdditionalImages !== undefined) {
+        try {
+          existingImages = JSON.parse(existingAdditionalImages);
+        } catch (e) {
+          existingImages = Array.isArray(existingAdditionalImages) ? existingAdditionalImages : [existingAdditionalImages];
+        }
+      } else {
+        existingImages = contact.additionalImages || [];
+      }
+
+      const newAdditionalFiles = req.files && req.files['additionalImages'] ? req.files['additionalImages'] : [];
+      const newImages = newAdditionalFiles.map(f => 'uploads/' + f.filename);
+      updatedFields.additionalImages = [...existingImages, ...newImages];
+
+      // Delete removed images from disk
+      if (contact.additionalImages) {
+        contact.additionalImages.forEach(img => {
+          if (!existingImages.includes(img) && img.startsWith('uploads/')) {
+            const imgPath = path.join(__dirname, img);
+            if (fs.existsSync(imgPath)) {
+              try { fs.unlinkSync(imgPath); } catch (e) {}
+            }
+          }
+        });
       }
     }
 
     const updated = db.updateContact(req.user.id, contactId, updatedFields);
     res.json(updated);
   } catch (err) {
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
+    if (req.files) {
+      Object.keys(req.files).forEach(key => {
+        req.files[key].forEach(f => {
+          try { fs.unlinkSync(f.path); } catch (e) {}
+        });
+      });
     }
     res.status(400).json({ error: err.message });
   }

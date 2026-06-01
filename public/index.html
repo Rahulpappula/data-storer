@@ -351,6 +351,30 @@
           <p class="input-hint">Provide an address or GPS coordinates. A direct link to open this on Google Maps will be generated automatically.</p>
         </div>
 
+        <!-- Additional Images (Gallery Attachments) -->
+        <div class="input-group">
+          <label>Additional Images / Gallery</label>
+          <div id="additional-images-preview-grid" class="additional-images-grid" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; margin-bottom: 8px;">
+            <!-- Dynamic gallery preview thumbs -->
+          </div>
+          <div style="margin-top: 5px;">
+            <button type="button" id="trigger-additional-images-btn" class="btn btn-secondary btn-sm"><i class="fa-solid fa-images"></i> Add Photos</button>
+            <input type="file" id="additional-images-input" accept="image/*" multiple style="display: none;">
+          </div>
+          <p class="input-hint">Attach extra photos or screenshots related to this contact.</p>
+        </div>
+
+        <!-- Custom Fields -->
+        <div class="input-group">
+          <label>Custom Info Fields</label>
+          <div id="custom-fields-container" class="custom-fields-wrapper" style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px;">
+            <!-- Dynamic custom input rows -->
+          </div>
+          <div style="margin-top: 8px;">
+            <button type="button" id="add-custom-field-row-btn" class="btn btn-secondary btn-sm"><i class="fa-solid fa-plus"></i> Add Custom Field</button>
+          </div>
+        </div>
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="contact-modal-cancel">Cancel</button>
           <button type="submit" class="btn btn-accent" id="contact-modal-save">Save Contact</button>

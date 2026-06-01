@@ -12,7 +12,9 @@
     contacts: [],
     theme: localStorage.getItem('datastorer_theme') || 'dark',
     pictureFile: null,
-    editingContactId: null
+    editingContactId: null,
+    additionalImageFiles: [], // new files selected
+    existingAdditionalImages: [] // existing images kept
   };
 
   const dom = {
@@ -80,7 +82,12 @@
     keyBack: q('#key-back'),
     pinSubmitBtn: q('#pin-submit-btn'),
     bioScanTrigger: q('#bio-scan-trigger'),
-    bioScannerStatus: q('#bio-scanner-status')
+    bioScannerStatus: q('#bio-scanner-status'),
+    additionalImagesPreviewGrid: q('#additional-images-preview-grid'),
+    triggerAdditionalImagesBtn: q('#trigger-additional-images-btn'),
+    additionalImagesInput: q('#additional-images-input'),
+    customFieldsContainer: q('#custom-fields-container'),
+    addCustomFieldRowBtn: q('#add-custom-field-row-btn')
   };
 
   function on(el, ev, fn) { if (!el) return; el.addEventListener(ev, fn); }
@@ -199,6 +206,31 @@
       const p = document.createElement('div'); p.className = 'contact-card-phone'; p.innerHTML = `<i class="fa-solid fa-phone"></i> <span>${phone}</span>`; card.appendChild(p);
       if (email) card.insertAdjacentHTML('beforeend', `<div class="contact-card-email"><i class="fa-solid fa-envelope"></i> <a href="mailto:${encodeURIComponent(contact.email)}">${email}</a></div>`);
       card.insertAdjacentHTML('beforeend', `<div class="contact-card-location" title="${location || 'No Address stored'}"><i class="fa-solid fa-location-dot"></i> <span>${location || 'No Address Stored'}</span></div>`);
+      
+      // Inject Custom Fields (Metadata Badges)
+      if (contact.customFields && contact.customFields.length > 0) {
+        const fieldsHtml = contact.customFields.map(f => `
+          <div class="contact-card-field-badge">
+            <span class="field-label">${escapeHTML(f.label)}:</span>
+            <span class="field-val">${escapeHTML(f.value)}</span>
+          </div>
+        `).join('');
+        card.insertAdjacentHTML('beforeend', `<div class="contact-card-custom-fields">${fieldsHtml}</div>`);
+      }
+
+      // Inject Additional Images Gallery
+      if (contact.additionalImages && contact.additionalImages.length > 0) {
+        const thumbsHtml = contact.additionalImages.map(img => `
+          <img src="/${img}" class="contact-card-gallery-thumb" alt="Gallery Photo" onclick="window.viewGalleryPhoto('/${img}')">
+        `).join('');
+        card.insertAdjacentHTML('beforeend', `
+          <div class="contact-card-gallery">
+            <p class="gallery-title"><i class="fa-solid fa-images"></i> Photos (${contact.additionalImages.length})</p>
+            <div class="gallery-thumbs">${thumbsHtml}</div>
+          </div>
+        `);
+      }
+
       if (contact.location) {
         card.insertAdjacentHTML('beforeend', `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.location)}" target="_blank" class="gmaps-link"><i class="fa-solid fa-map-location-dot"></i> View on GMaps</a>`);
       } else {
@@ -231,7 +263,11 @@
     dom.contactForm.reset();
     dom.avatarPreview && (dom.avatarPreview.src = '/api/placeholder');
     state.pictureFile = null;
+    state.additionalImageFiles = [];
+    state.existingAdditionalImages = [];
     dom.phoneList && (dom.phoneList.innerHTML = '');
+    dom.customFieldsContainer && (dom.customFieldsContainer.innerHTML = '');
+    if (dom.additionalImagesPreviewGrid) dom.additionalImagesPreviewGrid.innerHTML = '';
 
     if (contactId) {
       const contact = state.contacts.find(c => c.id === contactId);
@@ -246,6 +282,15 @@
       dom.contactNotes && (dom.contactNotes.value = contact.notes || '');
       dom.contactLocation && (dom.contactLocation.value = contact.location || '');
       if (contact.picture && dom.avatarPreview) dom.avatarPreview.src = '/' + contact.picture;
+
+      // Load existing additional images
+      state.existingAdditionalImages = contact.additionalImages ? [...contact.additionalImages] : [];
+      renderAdditionalImagesPreviewGrid();
+
+      // Load existing custom fields
+      if (contact.customFields && contact.customFields.length > 0) {
+        contact.customFields.forEach(f => addCustomFieldRow(f.label, f.value));
+      }
     } else {
       dom.contactEditId && (dom.contactEditId.value = '');
       addPhoneInput('', false);
@@ -266,6 +311,19 @@
     const notes = dom.contactNotes && dom.contactNotes.value.trim();
     const location = dom.contactLocation && dom.contactLocation.value.trim();
 
+    // Compile custom fields
+    const customFields = [];
+    if (dom.customFieldsContainer) {
+      const rows = dom.customFieldsContainer.querySelectorAll('.custom-field-row');
+      rows.forEach(row => {
+        const lbl = row.querySelector('.custom-field-label').value.trim();
+        const val = row.querySelector('.custom-field-value').value.trim();
+        if (lbl && val) {
+          customFields.push({ label: lbl, value: val });
+        }
+      });
+    }
+
     if (!name || phones.length === 0) { toast('Name and at least one mobile number are required', 'error'); return; }
 
     const formData = new FormData();
@@ -277,7 +335,19 @@
     formData.append('occupationLocation', occupationLocation || '');
     formData.append('notes', notes || '');
     formData.append('location', location || '');
+    formData.append('customFields', JSON.stringify(customFields));
+
     if (state.pictureFile) formData.append('picture', state.pictureFile);
+
+    // Append new additional files
+    state.additionalImageFiles.forEach(file => {
+      formData.append('additionalImages', file);
+    });
+
+    // Append existing images kept (for update)
+    if (editId) {
+      formData.append('existingAdditionalImages', JSON.stringify(state.existingAdditionalImages));
+    }
 
     try {
       if (editId) { await API.updateContact(editId, formData); toast('Contact updated', 'success'); }
@@ -289,6 +359,68 @@
   async function deleteContact(contactId) {
     if (!confirm('Delete this contact? This cannot be undone.')) return;
     try { await API.deleteContact(contactId); toast('Contact deleted', 'info'); await loadContacts(); } catch (err) { toast(err.message || 'Delete failed', 'error'); }
+  }
+
+  function renderAdditionalImagesPreviewGrid() {
+    if (!dom.additionalImagesPreviewGrid) return;
+    dom.additionalImagesPreviewGrid.innerHTML = '';
+
+    // Render existing images with delete option
+    state.existingAdditionalImages.forEach((img, index) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'image-preview-thumb';
+      thumb.innerHTML = `
+        <img src="/${img}" alt="Attached Image">
+        <button type="button" class="remove-img-btn" title="Remove image"><i class="fa-solid fa-trash"></i></button>
+      `;
+      thumb.querySelector('.remove-img-btn').addEventListener('click', () => {
+        state.existingAdditionalImages.splice(index, 1);
+        renderAdditionalImagesPreviewGrid();
+      });
+      dom.additionalImagesPreviewGrid.appendChild(thumb);
+    });
+
+    // Render new files
+    state.additionalImageFiles.forEach((file, index) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'image-preview-thumb';
+      
+      const img = document.createElement('img');
+      const reader = new FileReader();
+      reader.onload = (ev) => { img.src = ev.target.result; };
+      reader.readAsDataURL(file);
+      thumb.appendChild(img);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'remove-img-btn';
+      delBtn.title = 'Remove image';
+      delBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+      delBtn.addEventListener('click', () => {
+        state.additionalImageFiles.splice(index, 1);
+        renderAdditionalImagesPreviewGrid();
+      });
+      thumb.appendChild(delBtn);
+
+      dom.additionalImagesPreviewGrid.appendChild(thumb);
+    });
+  }
+
+  function addCustomFieldRow(label = '', value = '') {
+    if (!dom.customFieldsContainer) return;
+    const row = document.createElement('div');
+    row.className = 'custom-field-row';
+    row.innerHTML = `
+      <div class="input-wrapper" style="max-width: 140px;">
+        <input type="text" class="custom-field-label" placeholder="Label" value="${escapeHTML(label)}" required>
+      </div>
+      <div class="input-wrapper">
+        <input type="text" class="custom-field-value" placeholder="Value" value="${escapeHTML(value)}" required>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm remove-custom-field-btn"><i class="fa-solid fa-trash"></i></button>
+    `;
+    row.querySelector('.remove-custom-field-btn').addEventListener('click', () => row.remove());
+    dom.customFieldsContainer.appendChild(row);
   }
 
   function updatePinDots() {
@@ -364,6 +496,28 @@
     on(dom.contactModalCancel, 'click', closeContactModal);
     on(dom.contactForm, 'submit', handleContactFormSubmit);
     on(dom.addPhoneBtn, 'click', () => addPhoneInput('', true));
+
+    on(dom.triggerAdditionalImagesBtn, 'click', () => {
+      if (dom.additionalImagesInput) dom.additionalImagesInput.click();
+    });
+
+    on(dom.additionalImagesInput, 'change', () => {
+      if (!dom.additionalImagesInput || !dom.additionalImagesInput.files) return;
+      const files = Array.from(dom.additionalImagesInput.files);
+      files.forEach(f => {
+        if (f.size > 5 * 1024 * 1024) {
+          toast(`Image ${f.name} is too large (max 5MB)`, 'error');
+        } else {
+          state.additionalImageFiles.push(f);
+        }
+      });
+      dom.additionalImagesInput.value = ''; // Reset input to allow re-selection
+      renderAdditionalImagesPreviewGrid();
+    });
+
+    on(dom.addCustomFieldRowBtn, 'click', () => {
+      addCustomFieldRow();
+    });
 
     on(dom.contactPictureInput, 'change', () => {
       const f = dom.contactPictureInput.files && dom.contactPictureInput.files[0];
@@ -535,9 +689,32 @@
     } catch (err) { if (API && API.setToken) API.setToken(null); showAuthSection(); }
   }
 
+  function viewGalleryPhoto(src) {
+    let lb = document.getElementById('lightbox-modal');
+    if (!lb) {
+      lb = document.createElement('div');
+      lb.id = 'lightbox-modal';
+      lb.className = 'modal-overlay';
+      lb.style.zIndex = '2000';
+      lb.innerHTML = `
+        <div class="modal-card glass" style="max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 20px; border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+          <button class="modal-close" style="position: absolute; right: 15px; top: 15px; background: none; border: none; font-size: 24px; color: var(--text-main); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+          <img id="lightbox-img" src="" style="max-width: 100%; max-height: 80vh; border-radius: var(--radius-sm); object-fit: contain;">
+        </div>
+      `;
+      document.body.appendChild(lb);
+      lb.querySelector('.modal-close').addEventListener('click', () => lb.style.display = 'none');
+      lb.addEventListener('click', (e) => { if (e.target === lb) lb.style.display = 'none'; });
+    }
+    const img = lb.querySelector('#lightbox-img');
+    if (img) img.src = src;
+    lb.style.display = 'flex';
+  }
+
   // Graceful global helpers for inline handlers (if any)
   window.openContactModal = openContactModal;
   window.deleteContact = deleteContact;
+  window.viewGalleryPhoto = viewGalleryPhoto;
 
   // Startup
   function startup() { setTheme(state.theme); registerEvents(); checkAuthSession(); }

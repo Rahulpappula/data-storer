@@ -141,6 +141,8 @@ function addContact(userId, contactData) {
     notes: contactData.notes || '',
     location: contactData.location,
     picture: contactData.picture || null, // relative path or url
+    additionalImages: contactData.additionalImages || [], // array of additional image paths
+    customFields: contactData.customFields || [], // array of objects { label, value }
     createdAt: new Date().toISOString()
   };
   contacts.push(newContact);
@@ -162,6 +164,8 @@ function updateContact(userId, contactId, updatedFields) {
   const oldOccupation = contacts[idx].occupation || '';
   const oldOccupationLocation = contacts[idx].occupationLocation || '';
   const oldNotes = contacts[idx].notes || '';
+  const oldAdditionalImages = contacts[idx].additionalImages || [];
+  const oldCustomFields = contacts[idx].customFields || [];
   contacts[idx] = {
     ...contacts[idx],
     ...updatedFields,
@@ -172,7 +176,9 @@ function updateContact(userId, contactId, updatedFields) {
     phone: (updatedFields.phones && updatedFields.phones.length) ? updatedFields.phones[0] : (updatedFields.phone !== undefined ? updatedFields.phone : contacts[idx].phone),
     occupation: updatedFields.occupation !== undefined ? updatedFields.occupation : oldOccupation,
     occupationLocation: updatedFields.occupationLocation !== undefined ? updatedFields.occupationLocation : oldOccupationLocation,
-    notes: updatedFields.notes !== undefined ? updatedFields.notes : oldNotes
+    notes: updatedFields.notes !== undefined ? updatedFields.notes : oldNotes,
+    additionalImages: updatedFields.additionalImages !== undefined ? updatedFields.additionalImages : oldAdditionalImages,
+    customFields: updatedFields.customFields !== undefined ? updatedFields.customFields : oldCustomFields
   };
 
   saveContacts(userId, contacts);
@@ -197,6 +203,22 @@ function deleteContact(userId, contactId) {
         console.error('Error deleting contact image:', err);
       }
     }
+  }
+
+  // Delete additional images from disk if they exist
+  if (contact.additionalImages && Array.isArray(contact.additionalImages)) {
+    contact.additionalImages.forEach(img => {
+      if (img && img.startsWith('uploads/')) {
+        const imgPath = path.join(__dirname, img);
+        if (fs.existsSync(imgPath)) {
+          try {
+            fs.unlinkSync(imgPath);
+          } catch (err) {
+            console.error('Error deleting additional image:', err);
+          }
+        }
+      }
+    });
   }
 
   contacts.splice(idx, 1);

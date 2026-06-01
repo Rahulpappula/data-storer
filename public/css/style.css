@@ -1218,3 +1218,124 @@ html[data-theme="light"] .sub-form-card {
     padding: 20px;
   }
 }
+
+/* Gallery, custom fields, and lightbox styling */
+.additional-images-grid .image-preview-thumb {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border-focus);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.additional-images-grid .image-preview-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.additional-images-grid .image-preview-thumb .remove-img-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--danger);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: var(--transition);
+}
+.additional-images-grid .image-preview-thumb .remove-img-btn:hover {
+  background: var(--danger-hover);
+  transform: scale(1.1);
+}
+
+.custom-field-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.custom-field-row .input-wrapper {
+  flex: 1;
+}
+.custom-field-row input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(0,0,0,0.1);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  outline: none;
+  font-family: var(--font-family);
+  font-size: 14px;
+}
+html[data-theme="light"] .custom-field-row input {
+  background-color: rgba(255,255,255,0.4);
+}
+
+/* Contact Card Gallery */
+.contact-card-gallery {
+  margin-top: 15px;
+  border-top: 1px dashed var(--glass-border);
+  padding-top: 10px;
+}
+.gallery-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.gallery-thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 5px;
+}
+.gallery-thumbs::-webkit-scrollbar {
+  height: 4px;
+}
+.contact-card-gallery-thumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid var(--glass-border);
+  transition: var(--transition);
+}
+.contact-card-gallery-thumb:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 4px 10px rgba(6, 182, 212, 0.2);
+}
+
+/* Custom Field Badges on Cards */
+.contact-card-custom-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.contact-card-field-badge {
+  background: var(--glass-border);
+  border: 1px solid var(--glass-border);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  display: inline-flex;
+  gap: 4px;
+}
+.contact-card-field-badge .field-label {
+  color: var(--accent);
+  font-weight: 700;
+}
+.contact-card-field-badge .field-val {
+  color: var(--text-main);
+}

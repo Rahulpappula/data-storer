@@ -14,7 +14,8 @@
     pictureFile: null,
     editingContactId: null,
     additionalImageFiles: [], // new files selected
-    existingAdditionalImages: [] // existing images kept
+    existingAdditionalImages: [], // existing images kept
+    dismissedAlarms: [] // array of triggered alarm IDs
   };
 
   const dom = {
@@ -87,7 +88,13 @@
     triggerAdditionalImagesBtn: q('#trigger-additional-images-btn'),
     additionalImagesInput: q('#additional-images-input'),
     customFieldsContainer: q('#custom-fields-container'),
-    addCustomFieldRowBtn: q('#add-custom-field-row-btn')
+    addCustomFieldRowBtn: q('#add-custom-field-row-btn'),
+    contactReminderDate: q('#contact-reminder-date'),
+    contactReminderTime: q('#contact-reminder-time'),
+    contactReminderNote: q('#contact-reminder-note'),
+    landingInfoSections: q('#landing-info-sections'),
+    avatarOverlay: q('.avatar-overlay'),
+    avatarPreviewContainer: q('.avatar-preview-container')
   };
 
   function on(el, ev, fn) { if (!el) return; el.addEventListener(ev, fn); }
@@ -132,6 +139,7 @@
     if (dom.authSection) dom.authSection.style.display = 'flex';
     if (dom.dashboardSection) dom.dashboardSection.style.display = 'none';
     if (dom.userProfileWidget) dom.userProfileWidget.style.display = 'none';
+    if (dom.landingInfoSections) dom.landingInfoSections.style.display = 'block';
     if (dom.loginPwUsername) dom.loginPwUsername.focus();
   }
 
@@ -139,6 +147,7 @@
     if (dom.authSection) dom.authSection.style.display = 'none';
     if (dom.dashboardSection) dom.dashboardSection.style.display = 'block';
     if (dom.userProfileWidget) dom.userProfileWidget.style.display = 'flex';
+    if (dom.landingInfoSections) dom.landingInfoSections.style.display = 'none';
     if (dom.userGreeting && state.user) dom.userGreeting.textContent = `Hi, ${state.user.username}`;
   }
 
@@ -231,6 +240,27 @@
         `);
       }
 
+      // Inject Reminder Badge & Google Calendar Event Button
+      if (contact.reminderDate) {
+        const rDate = escapeHTML(contact.reminderDate);
+        const rTime = escapeHTML(contact.reminderTime || '09:00');
+        const rNote = escapeHTML(contact.reminderNote || 'Follow-up');
+        const gcalUrl = getGoogleCalendarUrl(contact);
+        
+        card.insertAdjacentHTML('beforeend', `
+          <div class="contact-card-reminder">
+            <div class="reminder-header">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>Reminder: ${rDate} at ${rTime}</span>
+            </div>
+            ${rNote ? `<div class="reminder-note">${rNote}</div>` : ''}
+            <a href="${gcalUrl}" target="_blank" class="gcal-btn">
+              <i class="fa-brands fa-google"></i> Add to Calendar
+            </a>
+          </div>
+        `);
+      }
+
       if (contact.location) {
         card.insertAdjacentHTML('beforeend', `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.location)}" target="_blank" class="gmaps-link"><i class="fa-solid fa-map-location-dot"></i> View on GMaps</a>`);
       } else {
@@ -282,6 +312,9 @@
       dom.contactNotes && (dom.contactNotes.value = contact.notes || '');
       dom.contactLocation && (dom.contactLocation.value = contact.location || '');
       if (contact.picture && dom.avatarPreview) dom.avatarPreview.src = '/' + contact.picture;
+      if (dom.contactReminderDate) dom.contactReminderDate.value = contact.reminderDate || '';
+      if (dom.contactReminderTime) dom.contactReminderTime.value = contact.reminderTime || '';
+      if (dom.contactReminderNote) dom.contactReminderNote.value = contact.reminderNote || '';
 
       // Load existing additional images
       state.existingAdditionalImages = contact.additionalImages ? [...contact.additionalImages] : [];
@@ -294,6 +327,9 @@
     } else {
       dom.contactEditId && (dom.contactEditId.value = '');
       addPhoneInput('', false);
+      if (dom.contactReminderDate) dom.contactReminderDate.value = '';
+      if (dom.contactReminderTime) dom.contactReminderTime.value = '';
+      if (dom.contactReminderNote) dom.contactReminderNote.value = '';
     }
     if (dom.contactModal) dom.contactModal.style.display = 'flex';
   }
@@ -336,6 +372,14 @@
     formData.append('notes', notes || '');
     formData.append('location', location || '');
     formData.append('customFields', JSON.stringify(customFields));
+
+    const reminderDate = dom.contactReminderDate ? dom.contactReminderDate.value : '';
+    const reminderTime = dom.contactReminderTime ? dom.contactReminderTime.value : '';
+    const reminderNote = dom.contactReminderNote ? dom.contactReminderNote.value.trim() : '';
+
+    formData.append('reminderDate', reminderDate);
+    formData.append('reminderTime', reminderTime);
+    formData.append('reminderNote', reminderNote);
 
     if (state.pictureFile) formData.append('picture', state.pictureFile);
 
@@ -496,6 +540,12 @@
     on(dom.contactModalCancel, 'click', closeContactModal);
     on(dom.contactForm, 'submit', handleContactFormSubmit);
     on(dom.addPhoneBtn, 'click', () => addPhoneInput('', true));
+
+    // Wire avatar click triggers to hidden input
+    const triggerAvatarInput = () => { if (dom.contactPictureInput) dom.contactPictureInput.click(); };
+    if (dom.avatarOverlay) on(dom.avatarOverlay, 'click', triggerAvatarInput);
+    if (dom.avatarPreviewContainer) on(dom.avatarPreviewContainer, 'click', triggerAvatarInput);
+    if (dom.avatarPreview) on(dom.avatarPreview, 'click', triggerAvatarInput);
 
     on(dom.triggerAdditionalImagesBtn, 'click', () => {
       if (dom.additionalImagesInput) dom.additionalImagesInput.click();
@@ -711,13 +761,108 @@
     lb.style.display = 'flex';
   }
 
+  function getGoogleCalendarUrl(contact) {
+    const date = contact.reminderDate || ''; // YYYY-MM-DD
+    const time = contact.reminderTime || '09:00'; // HH:MM
+    const note = contact.reminderNote || 'Follow-up';
+    
+    const cleanDate = date.replace(/-/g, '');
+    const cleanTime = time.replace(/:/g, '') + '00';
+    const startDateTime = `${cleanDate}T${cleanTime}`;
+    
+    // Add 30 mins for end date
+    const [hours, mins] = time.split(':').map(Number);
+    const endMinsTotal = mins + 30;
+    const endHours = (hours + Math.floor(endMinsTotal / 60)) % 24;
+    const endMins = endMinsTotal % 60;
+    const endStrHours = String(endHours).padStart(2, '0');
+    const endStrMins = String(endMins).padStart(2, '0');
+    const endDateTime = `${cleanDate}T${endStrHours}${endStrMins}00`;
+    
+    const title = encodeURIComponent(`Follow-up: ${contact.name}`);
+    const details = encodeURIComponent(`${note}\nPhone: ${contact.phone}`);
+    
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateTime}/${endDateTime}&details=${details}&sf=true&output=xml`;
+  }
+
+  function checkContactAlarms() {
+    if (!state.contacts || state.contacts.length === 0) return;
+    const now = new Date();
+    const curDateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    const curTimeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+    state.contacts.forEach(contact => {
+      if (contact.reminderDate) {
+        const reminderDateTimeStr = `${contact.reminderDate}T${contact.reminderTime || '09:00'}:00`;
+        const alarmTime = new Date(reminderDateTimeStr);
+        
+        const diffMs = now - alarmTime;
+        const alarmId = `${contact.id}-${contact.reminderDate}-${contact.reminderTime || '09:00'}`;
+        
+        if (diffMs >= 0 && diffMs < 15 * 60 * 1000 && !state.dismissedAlarms.includes(alarmId)) {
+          state.dismissedAlarms.push(alarmId);
+          showAlarmPopup(contact);
+        }
+      }
+    });
+  }
+
+  function showAlarmPopup(contact) {
+    let overlay = document.getElementById('alarm-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'alarm-overlay';
+      overlay.className = 'alarm-overlay';
+      document.body.appendChild(overlay);
+    }
+    
+    overlay.innerHTML = `
+      <div class="alarm-card glass">
+        <div class="alarm-ring-icon"><i class="fa-solid fa-bell"></i></div>
+        <h2>Calendar Reminder Alert!</h2>
+        <div class="alarm-time">${contact.reminderDate} at ${contact.reminderTime || '09:00'}</div>
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Contact: ${escapeHTML(contact.name)}</div>
+        <div class="alarm-desc">${escapeHTML(contact.reminderNote || 'Follow-up appointment')}</div>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+          <a href="tel:${encodeURIComponent(contact.phone)}" class="btn btn-accent btn-sm"><i class="fa-solid fa-phone"></i> Call Now</a>
+          <button class="btn btn-secondary btn-sm dismiss-alarm-btn">Dismiss Alarm</button>
+        </div>
+      </div>
+    `;
+    
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      osc.start();
+      setTimeout(() => osc.stop(), 500);
+    } catch(e) {}
+
+    overlay.querySelector('.dismiss-alarm-btn').addEventListener('click', () => {
+      overlay.style.display = 'none';
+      overlay.remove();
+    });
+    overlay.style.display = 'flex';
+  }
+
   // Graceful global helpers for inline handlers (if any)
   window.openContactModal = openContactModal;
   window.deleteContact = deleteContact;
   window.viewGalleryPhoto = viewGalleryPhoto;
 
   // Startup
-  function startup() { setTheme(state.theme); registerEvents(); checkAuthSession(); }
+  function startup() { 
+    setTheme(state.theme); 
+    registerEvents(); 
+    checkAuthSession(); 
+    // Start background interval to check for alarms every 10 seconds
+    setInterval(checkContactAlarms, 10000);
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startup); else startup();
 
 })();

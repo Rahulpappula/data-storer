@@ -376,7 +376,7 @@ app.post('/api/contacts', authenticateToken, upload.fields([
   { name: 'picture', maxCount: 1 },
   { name: 'additionalImages', maxCount: 10 }
 ]), (req, res) => {
-  const { name, phone, phones, location, email, occupation, occupationLocation, notes, customFields } = req.body;
+  const { name, phone, phones, location, email, occupation, occupationLocation, notes, customFields, reminderDate, reminderTime, reminderNote } = req.body;
 
   // Parse phones (may be JSON string when sent via FormData)
   let phonesArray = [];
@@ -420,7 +420,10 @@ app.post('/api/contacts', authenticateToken, upload.fields([
       location: location || '',
       picture: pictureFile ? 'uploads/' + pictureFile.filename : null,
       additionalImages: additionalFiles.map(f => 'uploads/' + f.filename),
-      customFields: parsedCustomFields
+      customFields: parsedCustomFields,
+      reminderDate: reminderDate || null,
+      reminderTime: reminderTime || null,
+      reminderNote: reminderNote || ''
     };
 
     const newContact = db.addContact(req.user.id, contactData);
@@ -443,7 +446,7 @@ app.put('/api/contacts/:id', authenticateToken, upload.fields([
   { name: 'additionalImages', maxCount: 10 }
 ]), (req, res) => {
   const contactId = req.params.id;
-  const { name, phone, phones, location, email, occupation, occupationLocation, notes, customFields, existingAdditionalImages } = req.body;
+  const { name, phone, phones, location, email, occupation, occupationLocation, notes, customFields, existingAdditionalImages, reminderDate, reminderTime, reminderNote } = req.body;
 
   try {
     const updatedFields = {};
@@ -453,6 +456,9 @@ app.put('/api/contacts/:id', authenticateToken, upload.fields([
     if (occupation !== undefined) updatedFields.occupation = occupation;
     if (occupationLocation !== undefined) updatedFields.occupationLocation = occupationLocation;
     if (notes !== undefined) updatedFields.notes = notes;
+    if (reminderDate !== undefined) updatedFields.reminderDate = reminderDate || null;
+    if (reminderTime !== undefined) updatedFields.reminderTime = reminderTime || null;
+    if (reminderNote !== undefined) updatedFields.reminderNote = reminderNote || '';
 
     // Parse phones when provided (expects JSON string or array)
     if (phones !== undefined) {

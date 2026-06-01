@@ -143,6 +143,9 @@ function addContact(userId, contactData) {
     picture: contactData.picture || null, // relative path or url
     additionalImages: contactData.additionalImages || [], // array of additional image paths
     customFields: contactData.customFields || [], // array of objects { label, value }
+    reminderDate: contactData.reminderDate || null,
+    reminderTime: contactData.reminderTime || null,
+    reminderNote: contactData.reminderNote || '',
     createdAt: new Date().toISOString()
   };
   contacts.push(newContact);
@@ -166,6 +169,9 @@ function updateContact(userId, contactId, updatedFields) {
   const oldNotes = contacts[idx].notes || '';
   const oldAdditionalImages = contacts[idx].additionalImages || [];
   const oldCustomFields = contacts[idx].customFields || [];
+  const oldReminderDate = contacts[idx].reminderDate || null;
+  const oldReminderTime = contacts[idx].reminderTime || null;
+  const oldReminderNote = contacts[idx].reminderNote || '';
   contacts[idx] = {
     ...contacts[idx],
     ...updatedFields,
@@ -178,7 +184,10 @@ function updateContact(userId, contactId, updatedFields) {
     occupationLocation: updatedFields.occupationLocation !== undefined ? updatedFields.occupationLocation : oldOccupationLocation,
     notes: updatedFields.notes !== undefined ? updatedFields.notes : oldNotes,
     additionalImages: updatedFields.additionalImages !== undefined ? updatedFields.additionalImages : oldAdditionalImages,
-    customFields: updatedFields.customFields !== undefined ? updatedFields.customFields : oldCustomFields
+    customFields: updatedFields.customFields !== undefined ? updatedFields.customFields : oldCustomFields,
+    reminderDate: updatedFields.reminderDate !== undefined ? updatedFields.reminderDate : oldReminderDate,
+    reminderTime: updatedFields.reminderTime !== undefined ? updatedFields.reminderTime : oldReminderTime,
+    reminderNote: updatedFields.reminderNote !== undefined ? updatedFields.reminderNote : oldReminderNote
   };
 
   saveContacts(userId, contacts);

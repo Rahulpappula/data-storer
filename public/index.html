@@ -264,6 +264,116 @@
       </div>
     </section>
 
+    <!-- LANDING INFO SECTIONS (Visible when logged out) -->
+    <div id="landing-info-sections">
+      
+      <!-- FEATURES SECTION -->
+      <section id="features" class="landing-section glass">
+        <h2>Platform Features</h2>
+        <p class="section-intro">Experience the next generation of safe contact keeping, built for professionals who value speed and design.</p>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-address-book"></i></div>
+            <h3>Intelligent Contact Sync</h3>
+            <p>Save multiple mobile numbers, company info, custom notes, physical addresses with direct Google Maps route sync, and detailed file galleries.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-key"></i></div>
+            <h3>Quick PIN Entry</h3>
+            <p>Skip entering passwords on secondary or personal devices by setting a secure, numeric PIN code for rapid keypad unlock.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-fingerprint"></i></div>
+            <h3>Biometric WebAuthn Login</h3>
+            <p>Log in keylessly with one tap using Windows Hello, Apple TouchID, FaceID, or physical security keys via encrypted browser passkeys.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-calendar-days"></i></div>
+            <h3>Calendar & Schedule Alarm</h3>
+            <p>Schedule important contact events or meetings, sync them instantly to Google Calendar, and receive real-time, in-app browser alarms.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECURITY SECTION -->
+      <section id="security" class="landing-section glass">
+        <h2>Enterprise-Grade Security</h2>
+        <p class="section-intro">We implement strict cryptographic and storage guardrails to ensure your personal contact ledger remains entirely private.</p>
+        <div class="security-features">
+          <div class="security-item">
+            <i class="fa-solid fa-shield-halved security-icon"></i>
+            <div>
+              <h3>Secure Key Derivation</h3>
+              <p>Passwords and PINs are hashed using industry-standard Blowfish-derived BCrypt salting routines, ensuring offline brute-force immunity.</p>
+            </div>
+          </div>
+          <div class="security-item">
+            <i class="fa-solid fa-lock security-icon"></i>
+            <div>
+              <h3>JSON Web Token (JWT) Session Guard</h3>
+              <p>Your authentication sessions are verified and encrypted using stateful JSON Web Tokens, automatically expiring after 24 hours of inactivity.</p>
+            </div>
+          </div>
+          <div class="security-item">
+            <i class="fa-solid fa-user-shield security-icon"></i>
+            <div>
+              <h3>Zero-Knowledge WebAuthn Keys</h3>
+              <p>Biometric public keys are registered locally and cryptographically signed on-device. Your actual fingerprint or facial map never leaves your hardware.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRICING SECTION -->
+      <section id="pricing" class="landing-section glass">
+        <h2>Simple, Transparent Pricing</h2>
+        <p class="section-intro">Start free, scale as your directory grows. No hidden fees or subscription lock-ins.</p>
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <span class="plan-badge">Popular</span>
+            <h3>Standard Tier</h3>
+            <div class="price">Free <span>/ lifetime</span></div>
+            <p class="plan-desc">Perfect for personal use, organizing family contact cards, and basic reminders.</p>
+            <ul class="plan-features">
+              <li><i class="fa-solid fa-check"></i> Save up to 250 Contact Cards</li>
+              <li><i class="fa-solid fa-check"></i> Standard Password & PIN Setup</li>
+              <li><i class="fa-solid fa-check"></i> 1 Mobile Number per contact</li>
+              <li><i class="fa-solid fa-check"></i> Local Database Storage</li>
+            </ul>
+            <a href="#register" class="btn btn-secondary btn-block">Get Started</a>
+          </div>
+          <div class="pricing-card premium">
+            <span class="plan-badge premium">Enterprise</span>
+            <h3>Enterprise Pro</h3>
+            <div class="price">$5 <span>/ monthly</span></div>
+            <p class="plan-desc">For heavy power-users, sales reps, and small business agencies requiring unlimited capabilities.</p>
+            <ul class="plan-features">
+              <li><i class="fa-solid fa-check"></i> Unlimited Contacts Directory</li>
+              <li><i class="fa-solid fa-check"></i> Biometric Passkey Logins</li>
+              <li><i class="fa-solid fa-check"></i> Multiple Mobile Numbers & Gallery</li>
+              <li><i class="fa-solid fa-check"></i> Google Calendar Event Reminders</li>
+              <li><i class="fa-solid fa-check"></i> Priority Email Support</li>
+            </ul>
+            <a href="#register" class="btn btn-primary btn-block">Upgrade Now</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER & CONTACT SECTION -->
+      <footer class="landing-footer glass">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <i class="fa-solid fa-cloud-bolt footer-icon"></i>
+            <span>DataStorer</span>
+          </div>
+          <p>Enterprise-grade contact storage, beautifully simple. Secure, fast, and private contact management.</p>
+          <div class="footer-contact">
+            <p><i class="fa-solid fa-envelope"></i> Support Contact: <a href="mailto:beast251205@gmail.com">beast251205@gmail.com</a></p>
+          </div>
+          <p class="copyright">© 2026 DataStorer Inc. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
   </main>
 
   <!-- ADD / EDIT CONTACT MODAL -->
@@ -349,6 +459,25 @@
             <input type="text" id="contact-location" placeholder="Address, City or Coordinates (e.g. 12.9716,77.5946)">
           </div>
           <p class="input-hint">Provide an address or GPS coordinates. A direct link to open this on Google Maps will be generated automatically.</p>
+        </div>
+
+        <!-- Calendar / Alarm Reminder -->
+        <div class="input-group">
+          <label>Set Reminder / Calendar Event</label>
+          <div style="display: flex; gap: 10px;">
+            <div class="input-wrapper" style="flex: 1;">
+              <i class="fa-solid fa-calendar input-icon"></i>
+              <input type="date" id="contact-reminder-date" style="padding-left: 42px;">
+            </div>
+            <div class="input-wrapper" style="flex: 1;">
+              <i class="fa-solid fa-clock input-icon"></i>
+              <input type="time" id="contact-reminder-time" style="padding-left: 42px;">
+            </div>
+          </div>
+          <div class="input-wrapper" style="margin-top: 8px;">
+            <i class="fa-solid fa-bell input-icon"></i>
+            <input type="text" id="contact-reminder-note" placeholder="Reminder note (e.g. Call for anniversary update)" style="padding-left: 42px;">
+          </div>
         </div>
 
         <!-- Additional Images (Gallery Attachments) -->

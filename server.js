@@ -375,7 +375,17 @@ app.get('/api/contacts', authenticateToken, (req, res) => {
 app.post('/api/contacts', authenticateToken, upload.single('picture'), (req, res) => {
   const { name, phone, phones, location, email, occupation, occupationLocation, notes } = req.body;
 
-  if (!name || !phone) {
+  // Parse phones (may be JSON string when sent via FormData)
+  let phonesArray = [];
+  if (phones) {
+    try { phonesArray = JSON.parse(phones); } catch (e) { phonesArray = Array.isArray(phones) ? phones : [phones]; }
+  } else if (phone) {
+    phonesArray = [phone];
+  }
+
+  const primaryPhone = phone || (phonesArray && phonesArray[0]);
+
+  if (!name || !primaryPhone) {
     // Clean up uploaded file if validation fails
     if (req.file) {
       fs.unlinkSync(req.file.path);
@@ -384,17 +394,9 @@ app.post('/api/contacts', authenticateToken, upload.single('picture'), (req, res
   }
 
   try {
-    // Parse phones (may be JSON string when sent via FormData)
-    let phonesArray = [];
-    if (phones) {
-      try { phonesArray = JSON.parse(phones); } catch (e) { phonesArray = Array.isArray(phones) ? phones : [phones]; }
-    } else if (phone) {
-      phonesArray = [phone];
-    }
-
     const contactData = {
       name,
-      phone: phonesArray[0] || (phone || ''),
+      phone: primaryPhone,
       phones: phonesArray,
       email: email || '',
       occupation: occupation || '',

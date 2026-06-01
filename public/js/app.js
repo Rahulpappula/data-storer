@@ -270,6 +270,7 @@
 
     const formData = new FormData();
     formData.append('name', name);
+    formData.append('phone', phones[0] || '');
     formData.append('phones', JSON.stringify(phones));
     formData.append('email', email || '');
     formData.append('occupation', occupation || '');
